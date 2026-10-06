@@ -1,102 +1,72 @@
+import '@fontsource/press-start-2p/latin-400.css';
 import './style.css';
-import { mulberry32 } from './util/math';
+import { FONT, H, STEP, W } from './config';
+import { initInput, setPaused } from './input';
+import { render } from './render';
+import { buildBackground } from './render/background';
+import { loadSettings } from './settings';
+import { press } from './sim/combat';
+import { step } from './sim/step';
+import { G, O, P, looks } from './sim/state';
+import { initUI } from './ui';
 
-// Phase 0 placeholder: an arena title card proving the build + deploy pipeline.
-// The real game is ported in Phase 1.
-
-const W = 640;
-const H = 480;
-const FONT = '"Press Start 2P","Courier New",monospace';
+loadSettings();
 
 const cv = document.getElementById('c') as HTMLCanvasElement;
-const ctx = cv.getContext('2d')!;
+const ctx = cv.getContext('2d');
+if (!ctx) throw new Error('Canvas 2D is not available');
 
-// Render at device resolution so text stays crisp on phones.
-const dpr = Math.min(window.devicePixelRatio || 1, 3);
-cv.width = W * dpr;
-cv.height = H * dpr;
+const sync = initUI();
+initInput(cv, document.getElementById('pad') as HTMLElement);
 
-function drawArena(): void {
-  const r = mulberry32(11);
-  const gr = ctx.createLinearGradient(0, 0, 0, H);
-  gr.addColorStop(0, '#04061a');
-  gr.addColorStop(0.55, '#131a4a');
-  gr.addColorStop(1, '#1b2260');
-  ctx.fillStyle = gr;
-  ctx.fillRect(0, 0, W, H);
-
-  // crowd silhouettes
-  for (let row = 0; row < 5; row++) {
-    const y0 = 34 + row * 28;
-    for (let x = -12; x < W + 20; x += 16 + row * 2) {
-      const rr = 7 + row * 0.9;
-      const jx = x + r() * 8;
-      const jy = y0 + r() * 6;
-      ctx.fillStyle = `hsl(${Math.floor(r() * 360)},28%,${10 + row * 2.5}%)`;
-      ctx.beginPath();
-      ctx.arc(jx, jy, rr, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillRect(jx - rr * 1.1, jy + rr * 0.6, rr * 2.2, 26);
-    }
-  }
-
-  const sp = ctx.createRadialGradient(W / 2, 230, 10, W / 2, 230, 360);
-  sp.addColorStop(0, 'rgba(255,238,190,.38)');
-  sp.addColorStop(1, 'rgba(255,238,190,0)');
-  ctx.fillStyle = sp;
-  ctx.fillRect(0, 0, W, H);
-
-  // canvas floor
-  ctx.fillStyle = '#26307a';
-  ctx.beginPath();
-  ctx.moveTo(120, 318);
-  ctx.lineTo(520, 318);
-  ctx.lineTo(W + 60, H);
-  ctx.lineTo(-60, H);
-  ctx.closePath();
-  ctx.fill();
-
-  // ropes
-  const cols = ['#e63946', '#f1f1f1', '#3a86ff'];
-  ctx.lineCap = 'round';
-  cols.forEach((c, i) => {
-    const y = 186 + i * 40;
-    ctx.beginPath();
-    ctx.moveTo(76, y);
-    ctx.lineTo(W - 76, y);
-    ctx.strokeStyle = 'rgba(0,0,0,.5)';
-    ctx.lineWidth = 9;
-    ctx.stroke();
-    ctx.strokeStyle = c;
-    ctx.lineWidth = 6;
-    ctx.stroke();
-  });
-  for (const px of [76, W - 76]) {
-    ctx.fillStyle = '#303a7a';
-    ctx.fillRect(px - 9, 150, 18, 170);
-    ctx.fillStyle = '#e63946';
-    ctx.fillRect(px - 11, 170, 22, 14);
-  }
+try {
+  void document.fonts.load('10px ' + FONT);
+} catch {
+  /* the fallback font is used until the pixel font is ready */
 }
 
-function bigText(txt: string, x: number, y: number, size: number, color: string): void {
-  ctx.font = `${size}px ${FONT}`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = Math.max(4, size / 5);
-  ctx.strokeStyle = '#000';
-  ctx.strokeText(txt, x, y);
-  ctx.fillStyle = color;
-  ctx.fillText(txt, x, y);
+// Keep the backing store matched to the on-screen size and device pixel ratio.
+let scale = 1;
+let bg: HTMLCanvasElement | null = null;
+let needFit = true;
+function fit(): void {
+  needFit = false;
+  // Sharp on high-DPI screens, but capped so fill cost stays reasonable on phones.
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const px = Math.max(1, Math.min(1280, Math.round(cv.getBoundingClientRect().width * dpr)));
+  if (px === cv.width && bg) return;
+  cv.width = px;
+  cv.height = Math.round((px * H) / W);
+  scale = px / W;
+  bg = buildBackground(scale);
 }
+new ResizeObserver(() => (needFit = true)).observe(cv);
+addEventListener('resize', () => (needFit = true));
 
+// Fixed-timestep simulation: identical behaviour on 60, 120 or 144 Hz screens.
+let last = performance.now();
+let acc = 0;
 function frame(now: number): void {
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  drawArena();
-  bigText('KNOCKOUT KING', W / 2, 250, 30, '#ffd23f');
-  if (Math.floor(now / 500) % 2 === 0) bigText('COMING SOON', W / 2, 300, 14, '#ffffff');
+  const dt = Math.min((now - last) / 1000, 0.1);
+  last = now;
+  if (!G.paused) {
+    acc += dt;
+    let n = 0;
+    while (acc >= STEP && n < 30) {
+      step(STEP);
+      acc -= STEP;
+      n++;
+    }
+    if (n === 30) acc = 0;
+  }
+  if (needFit) fit();
+  if (bg) render(ctx as CanvasRenderingContext2D, bg, scale);
+  sync();
   requestAnimationFrame(frame);
 }
+requestAnimationFrame(frame);
 
-document.fonts.load(`16px "Press Start 2P"`).finally(() => requestAnimationFrame(frame));
+// Handy for poking at the game from the dev console; stripped from production builds.
+if (import.meta.env.DEV) {
+  Object.assign(window, { __kk: { G, P, O, looks, press, setPaused, step } });
+}

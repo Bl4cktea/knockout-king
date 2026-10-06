@@ -1,9 +1,13 @@
 export const clamp = (v: number, a: number, b: number): number => Math.max(a, Math.min(b, v));
 export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
-export const rand = (a: number, b: number): number => a + Math.random() * (b - a);
 
 /** Frame-rate independent exponential approach factor for `x += (target - x) * damp(k, dt)`. */
 export const damp = (k: number, dt: number): number => 1 - Math.exp(-dt * k);
+
+/** Wrapping array access (also satisfies noUncheckedIndexedAccess). */
+export function at<T>(arr: readonly T[], i: number): T {
+  return arr[((i % arr.length) + arr.length) % arr.length] as T;
+}
 
 /** Small seeded PRNG (mulberry32) so procedural art is identical on every load. */
 export function mulberry32(seed: number): () => number {

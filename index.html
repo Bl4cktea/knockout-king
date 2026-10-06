@@ -6,16 +6,23 @@
     <title>Knockout King</title>
     <meta
       name="description"
-      content="Arcade boxing in your browser. Build a cartoon fighter, talk trash, and knock out the champ."
+      content="Arcade boxing in your browser. Dodge, block, land the star punch and knock out the champ."
     />
     <meta name="theme-color" content="#080b1f" />
+    <link rel="canonical" href="https://bl4cktea.github.io/knockout-king/" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
-      rel="stylesheet"
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Knockout King" />
+    <meta
+      property="og:description"
+      content="Arcade boxing in your browser. Dodge, block, land the star punch and knock out the champ."
     />
+    <meta property="og:url" content="https://bl4cktea.github.io/knockout-king/" />
+    <meta property="og:image" content="https://bl4cktea.github.io/knockout-king/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <main class="wrap">
@@ -24,9 +31,47 @@
         width="640"
         height="480"
         role="img"
-        aria-label="Knockout King title screen"
+        aria-label="Boxing game: dodge, block and punch your opponent"
       ></canvas>
-      <p class="note">The new Knockout King is in training. Check back soon.</p>
+      <noscript><p class="note">Knockout King needs JavaScript to run.</p></noscript>
+
+      <div class="pad" id="pad">
+        <button type="button" data-a="dl">&#9664; Dodge</button>
+        <button type="button" data-a="blk">Block (hold)</button>
+        <button type="button" data-a="dr">Dodge &#9654;</button>
+        <button type="button" data-a="pl">Left punch</button>
+        <button type="button" data-a="star">Star punch</button>
+        <button type="button" data-a="pr">Right punch</button>
+      </div>
+
+      <section class="panel">
+        <div class="row">
+          <label
+            >Opponent name
+            <input id="nm" type="text" maxlength="12" autocomplete="off" spellcheck="false"
+          /></label>
+          <button id="shuffle" class="btn" type="button">Shuffle faces</button>
+          <button id="swapf" class="btn" type="button">Swap faces</button>
+          <button id="pause" class="btn" type="button">Pause</button>
+          <button id="mute" class="btn" type="button">Sound: on</button>
+          <label class="check"><input id="rm" type="checkbox" /> Reduce motion</label>
+        </div>
+        <ul class="help">
+          <li><kbd>A</kbd><kbd>&larr;</kbd> Dodge left</li>
+          <li><kbd>D</kbd><kbd>&rarr;</kbd> Dodge right</li>
+          <li><kbd>S</kbd><kbd>&darr;</kbd> Hold to block</li>
+          <li><kbd>Z</kbd><kbd>J</kbd> Left punch</li>
+          <li><kbd>X</kbd><kbd>K</kbd> Right punch</li>
+          <li><kbd>Space</kbd> Star punch</li>
+          <li><kbd>P</kbd><kbd>Esc</kbd> Pause</li>
+        </ul>
+        <p class="tips">
+          <b>How to win:</b> a glove glowing on one side means a hook is coming, so dodge to the
+          <b>opposite</b> side. A glove raised high means a jab: block it or sidestep. Punch only
+          when his gloves drop. Guarded punches bounce off. Land hits in openings to earn stars,
+          then spend one for a big stunning punch. Knock him down twice.
+        </p>
+      </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
