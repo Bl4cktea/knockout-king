@@ -66,9 +66,21 @@ export function initUI(): () => void {
     });
   }
 
+  // Once a bout has started, collapse the panel; "Learn more" brings everything back.
+  const panel = el<HTMLElement>('panel');
+  const learn = el<HTMLButtonElement>('learn');
+  learn.addEventListener('click', (e) => {
+    const open = panel.toggleAttribute('data-expanded');
+    learn.setAttribute('aria-expanded', String(open));
+    learn.textContent = open ? 'Show less' : 'Learn more';
+    if (e.detail > 0) learn.blur();
+  });
+
   let lastLabel = '';
   let lastDisabled = false;
   return () => {
+    if (!panel.hasAttribute('data-compact') && G.scene !== 'title')
+      panel.setAttribute('data-compact', '');
     const label = G.paused ? 'Resume' : 'Pause';
     const disabled = !G.paused && G.scene !== 'intro' && G.scene !== 'fight';
     if (label !== lastLabel) pause.textContent = lastLabel = label;

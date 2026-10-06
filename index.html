@@ -44,22 +44,26 @@
         <button type="button" data-a="pr">Right punch</button>
       </div>
 
-      <section class="panel">
-        <div class="row">
-          <label
+      <section class="panel" id="panel">
+        <div class="row top">
+          <label class="cust"
             >Opponent name
             <input id="nm" type="text" maxlength="12" autocomplete="off" spellcheck="false"
           /></label>
+          <div class="actions">
+            <button id="pause" class="btn" type="button">Pause</button>
+            <button id="mute" class="btn" type="button">Sound: on</button>
+          </div>
+        </div>
+        <div class="row cust">
           <button id="shuffle" class="btn" type="button">Shuffle faces</button>
           <button id="swapf" class="btn" type="button">Swap faces</button>
-          <button id="pause" class="btn" type="button">Pause</button>
-          <button id="mute" class="btn" type="button">Sound: on</button>
           <label class="check"><input id="rm" type="checkbox" /> Reduce motion</label>
         </div>
-        <ul class="help">
-          <li><kbd>A</kbd><kbd>&larr;</kbd> Dodge left</li>
-          <li><kbd>D</kbd><kbd>&rarr;</kbd> Dodge right</li>
-          <li><kbd>S</kbd><kbd>&darr;</kbd> Hold to block</li>
+        <ul class="help keys">
+          <li><kbd>A</kbd><kbd class="sym">&larr;</kbd> Dodge left</li>
+          <li><kbd>D</kbd><kbd class="sym">&rarr;</kbd> Dodge right</li>
+          <li><kbd>S</kbd><kbd class="sym">&darr;</kbd> Hold to block</li>
           <li><kbd>Z</kbd><kbd>J</kbd> Left punch</li>
           <li><kbd>X</kbd><kbd>K</kbd> Right punch</li>
           <li><kbd>Space</kbd> Star punch</li>
@@ -67,9 +71,13 @@
         </ul>
         <p class="tips">
           <b>How to win:</b> a glove glowing on one side means a hook is coming, so dodge to the
-          <b>opposite</b> side. A glove raised high means a jab: block it or sidestep. Punch only
-          when his gloves drop. Guarded punches bounce off. Land hits in openings to earn stars,
-          then spend one for a big stunning punch. Knock him down twice.
+          <b>opposite</b> side.
+          <span class="tips-more"
+            >A glove raised high means a jab: block it or sidestep. Punch only when his gloves drop.
+            Guarded punches bounce off. Land hits in openings to earn stars, then spend one for a
+            big stunning punch. Knock him down twice.</span
+          >
+          <button id="learn" class="learn" type="button" aria-expanded="false">Learn more</button>
         </p>
       </section>
     </main>
