@@ -1,3 +1,6 @@
+import { isValidFace } from './face/config';
+import type { FaceConfig } from './face/config';
+import { TRUNK_COLORS } from './fighters/boxer';
 import type { Grade } from './fighters/types';
 
 const KEY = 'kk:v1:settings';
@@ -14,6 +17,10 @@ export type CareerMap = Record<string, FighterRecord>;
 
 export interface Settings {
   name: string;
+  /** Your boxer's name, used when sharing a challenge link. */
+  playerName: string;
+  /** Your edited boxer, so it survives a reload. null = defaults. */
+  player: { face: FaceConfig; trunks: string } | null;
   muted: boolean;
   /** null = follow the OS `prefers-reduced-motion` setting. */
   reduceMotion: boolean | null;
@@ -32,6 +39,8 @@ const defaultRecord = (): FighterRecord => ({
 
 export const settings: Settings = {
   name: DEFAULT_NAME,
+  playerName: 'CHALLENGER',
+  player: null,
   muted: false,
   reduceMotion: null,
   selectedFighterId: 'gabby',
@@ -106,13 +115,13 @@ export function recordVictory(
 }
 
 /** Names are drawn with canvas fillText only (never as HTML), but keep them tidy anyway. */
-export function cleanName(raw: string): string {
+export function cleanName(raw: string, fallback = DEFAULT_NAME): string {
   const printable = [...raw].filter((ch) => {
     const c = ch.charCodeAt(0);
     return c > 31 && c !== 127;
   });
   const s = printable.join('').trim().toUpperCase().slice(0, 12);
-  return s || DEFAULT_NAME;
+  return s || fallback;
 }
 
 export function loadSettings(): void {
@@ -123,6 +132,13 @@ export function loadSettings(): void {
     if (typeof d !== 'object' || d === null) return;
     const o = d as Record<string, unknown>;
     if (typeof o.name === 'string') settings.name = cleanName(o.name);
+    if (typeof o.playerName === 'string') {
+      settings.playerName = cleanName(o.playerName, 'CHALLENGER');
+    }
+    const p = o.player as { face?: FaceConfig; trunks?: unknown } | null | undefined;
+    if (p && p.face && isValidFace(p.face) && TRUNK_COLORS.includes(p.trunks as string)) {
+      settings.player = { face: { ...p.face }, trunks: p.trunks as string };
+    }
     if (typeof o.muted === 'boolean') settings.muted = o.muted;
     if (typeof o.reduceMotion === 'boolean') settings.reduceMotion = o.reduceMotion;
     if (typeof o.selectedFighterId === 'string') settings.selectedFighterId = o.selectedFighterId;

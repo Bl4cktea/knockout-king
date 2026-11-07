@@ -14,6 +14,7 @@ import {
   saveSettings,
   settings,
 } from './settings';
+import { challengerFighter, decodeChallenger, encodeChallenger } from './share';
 import { newFight, selectFighter } from './sim/flow';
 import { G, P, looks } from './sim/state';
 import { pickOne } from './util/random';
@@ -87,10 +88,55 @@ export function initUI(): () => void {
 
   let editTarget: 'opp' | 'player' = 'opp';
 
+  const pname = el<HTMLInputElement>('pname');
+  const shareBtn = el<HTMLButtonElement>('share');
+  const shareMsg = el<HTMLElement>('share-msg');
+  const challengeOverlay = el<HTMLElement>('challenge-overlay');
+  const challengeFace = el<HTMLCanvasElement>('challenge-face');
+  const challengeSub = el<HTMLElement>('challenge-sub');
+
+  // Restore the boxer the player built last time.
+  if (settings.player) {
+    looks.player.face = { ...settings.player.face };
+    looks.player.trunks = settings.player.trunks;
+  }
+  pname.value = settings.playerName;
+  const savePlayer = (): void => {
+    settings.player = { face: { ...looks.player.face }, trunks: looks.player.trunks };
+    saveSettings();
+  };
+
   // Initialize active fighter from saved career settings
   const initialFighter = getFighterById(settings.selectedFighterId);
   selectFighter(initialFighter);
   nm.value = settings.name;
+
+  // A shared link (#f=...) opens a "challenges you" screen for that boxer.
+  const clearHash = (): void => history.replaceState(null, '', location.pathname + location.search);
+  const challenger = decodeChallenger(new URLSearchParams(location.hash.slice(1)).get('f') ?? '');
+  if (challenger) {
+    const fighter = challengerFighter(challenger);
+    selectFighter(fighter);
+    nm.value = settings.name;
+    challengeSub.textContent = `${challenger.name} CHALLENGES YOU!`;
+    renderMiniPortrait(challengeFace, challenger.face, false, 96);
+    challengeOverlay.hidden = false;
+    el<HTMLButtonElement>('challenge-accept').addEventListener('click', () => {
+      ac();
+      challengeOverlay.hidden = true;
+      clearHash();
+      newFight(fighter);
+    });
+    el<HTMLButtonElement>('challenge-decline').addEventListener('click', () => {
+      challengeOverlay.hidden = true;
+      clearHash();
+      selectFighter(initialFighter);
+      nm.value = settings.name;
+      renderCircuit();
+    });
+  } else if (location.hash.startsWith('#f=')) {
+    clearHash(); // unreadable or tampered link: ignore it
+  }
 
   const cards: HTMLButtonElement[] = [];
 
@@ -189,6 +235,7 @@ export function initUI(): () => void {
         const key = part as keyof typeof FACE_COUNTS;
         fc[key] = (fc[key] + 1) % FACE_COUNTS[key];
       }
+      if (editTarget === 'player') savePlayer();
       renderCircuit();
       if (e.detail > 0) btn.blur();
     });
@@ -245,6 +292,7 @@ export function initUI(): () => void {
     looks.player.face = randomFace();
     looks.opp.trunks = pickOne(TRUNK_COLORS);
     looks.player.trunks = pickOne(TRUNK_COLORS.filter((c) => c !== looks.opp.trunks));
+    savePlayer();
     renderCircuit();
   });
 
@@ -252,7 +300,29 @@ export function initUI(): () => void {
     const mine = looks.player.face;
     looks.player.face = looks.opp.face;
     looks.opp.face = mine;
+    savePlayer();
     renderCircuit();
+  });
+
+  pname.addEventListener('input', () => {
+    settings.playerName = cleanName(pname.value, 'CHALLENGER');
+    saveSettings();
+  });
+
+  shareBtn.addEventListener('click', () => {
+    const code = encodeChallenger({
+      name: settings.playerName,
+      face: looks.player.face,
+      trunks: looks.player.trunks,
+    });
+    const url = `${location.origin}${location.pathname}#f=${code}`;
+    navigator.clipboard.writeText(url).then(
+      () => (shareMsg.textContent = 'Link copied!'),
+      () => {
+        history.replaceState(null, '', url); // fallback: copy it from the address bar
+        shareMsg.textContent = 'Copy the link from the address bar.';
+      },
+    );
   });
 
   pause.addEventListener('click', togglePause);
@@ -275,7 +345,7 @@ export function initUI(): () => void {
   });
 
   // After a mouse click, hand focus back to the page so Space/Enter keep working as game keys.
-  for (const b of [shuffle, swap, pause, mute]) {
+  for (const b of [shuffle, swap, pause, mute, shareBtn]) {
     b.addEventListener('click', (e) => {
       if (e.detail > 0) b.blur();
     });

@@ -115,6 +115,23 @@
               </div>
             </div>
           </div>
+          <div
+            id="challenge-overlay"
+            class="victory-overlay"
+            role="dialog"
+            aria-labelledby="challenge-heading"
+            hidden
+          >
+            <div class="victory-card">
+              <canvas id="challenge-face" width="96" height="96" aria-hidden="true"></canvas>
+              <h2 id="challenge-heading" class="victory-title">CHALLENGER!</h2>
+              <p id="challenge-sub" class="victory-sub"></p>
+              <div class="victory-actions">
+                <button id="challenge-accept" class="btn btn-primary" type="button">Accept</button>
+                <button id="challenge-decline" class="btn" type="button">No thanks</button>
+              </div>
+            </div>
+          </div>
         </div>
         <noscript><p class="note">Knockout King needs JavaScript to run.</p></noscript>
 
@@ -179,6 +196,14 @@
               <button type="button" class="btn" data-part="facial">Facial Hair</button>
               <button type="button" class="btn" data-part="trunks">Trunks Color</button>
               <button type="button" class="btn" data-part="extras">Gear &amp; Flair</button>
+            </div>
+            <div class="row share-row">
+              <label class="cust"
+                >Your Tag
+                <input id="pname" type="text" maxlength="12" autocomplete="off" spellcheck="false"
+              /></label>
+              <button id="share" class="btn" type="button">Share my boxer</button>
+              <span id="share-msg" class="locker-sub" role="status"></span>
             </div>
           </div>
 

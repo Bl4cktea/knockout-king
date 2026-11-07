@@ -550,3 +550,14 @@ kbd.sym {
     display: none;
   }
 }
+
+.share-row {
+  margin-top: 10px;
+  align-items: flex-end;
+}
+#challenge-face {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}

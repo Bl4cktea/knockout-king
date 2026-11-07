@@ -115,7 +115,8 @@ function downStep(dt: number): void {
       const timeBonus = Math.max(0, Math.round((90 - G.boutTime) * 40));
       P.score += timeBonus + P.hp * 15;
       const idx = ROSTER.findIndex((f) => f.id === O.f.id);
-      G.newRecord = recordVictory(O.f.id, idx >= 0 ? idx : 3, P.score, G.boutTime, grade);
+      // Shared challengers (not in the roster) don't touch career records or unlocks.
+      G.newRecord = idx >= 0 && recordVictory(O.f.id, idx, P.score, G.boutTime, grade);
       G.banner = { text: 'K.O.!', t: 0, dur: 1.5, size: 56, color: '#ff4d4d' };
       sfx.win();
       sfx.trophy();

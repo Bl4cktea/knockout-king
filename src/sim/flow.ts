@@ -1,5 +1,6 @@
 import { sfx } from '../audio';
 import { cloneLook } from '../fighters/boxer';
+import { ROSTER } from '../fighters/champ';
 import type { FighterData } from '../fighters/types';
 import { saveSettings, settings } from '../settings';
 import { parts } from './fx';
@@ -12,9 +13,12 @@ export function selectFighter(fighter: FighterData): void {
   O.hp = fighter.maxHp;
   O.maxhp = fighter.maxHp;
   looks.opp = cloneLook(fighter.look);
-  settings.selectedFighterId = fighter.id;
   settings.name = fighter.name;
-  saveSettings();
+  // Shared challengers are temporary: never remember them as the selected rival.
+  if (ROSTER.some((f) => f.id === fighter.id)) {
+    settings.selectedFighterId = fighter.id;
+    saveSettings();
+  }
 }
 
 /** Reset everything and start a fresh bout against `fighter`. */
