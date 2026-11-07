@@ -1,6 +1,7 @@
 import type { FaceConfig } from '../face/config';
 
 export type Atk = 'L' | 'R' | 'S';
+export type Grade = 'S' | 'A' | 'B' | 'C';
 
 /** What a fighter looks like. Faces are editable at runtime, so this is cloned into state. */
 export interface Look {
@@ -47,7 +48,11 @@ export interface Tuning {
 export interface FighterData {
   id: string;
   name: string;
+  title?: string;
+  quote?: string;
   maxHp: number;
+  hearts?: number;
+  sRankTime?: number;
   look: Look;
   tune: Tuning;
 }

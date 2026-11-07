@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { STEP } from '../src/config';
-import { CHAMP } from '../src/fighters/champ';
-import { press } from '../src/sim/combat';
-import { newFight } from '../src/sim/flow';
+import { CHAMP, GABBY, ROSTER } from '../src/fighters/champ';
+import { computeGrade, formatBoutTime } from '../src/settings';
+import { hurtPlayer, press } from '../src/sim/combat';
+import { newFight, selectFighter } from '../src/sim/flow';
 import { G, O, OG, OH, P, buffer, held } from '../src/sim/state';
 import { step } from '../src/sim/step';
 import { mulberry32 } from '../src/util/math';
@@ -20,7 +21,8 @@ function start(seed: number): void {
   G.time = 0;
   G.banner = null;
   held.blk = false;
-  newFight();
+  selectFighter(CHAMP);
+  newFight(CHAMP);
 }
 
 /** Advance `seconds` of simulated time. */
@@ -35,7 +37,20 @@ function toFight(): void {
 }
 
 function assertSane(): void {
-  for (const v of [P.hp, P.x, P.stars, P.stun, O.hp, O.timer, O.downY, G.time, OH.ox, OH.rot]) {
+  for (const v of [
+    P.hp,
+    P.x,
+    P.stars,
+    P.stun,
+    P.hearts,
+    P.score,
+    O.hp,
+    O.timer,
+    O.downY,
+    G.time,
+    OH.ox,
+    OH.rot,
+  ]) {
     expect(Number.isFinite(v)).toBe(true);
   }
   for (const g of [OG.L, OG.R]) {
@@ -45,6 +60,8 @@ function assertSane(): void {
   expect(P.hp).toBeLessThanOrEqual(100);
   expect(P.stars).toBeGreaterThanOrEqual(0);
   expect(P.stars).toBeLessThanOrEqual(3);
+  expect(P.hearts).toBeGreaterThanOrEqual(0);
+  expect(P.hearts).toBeLessThanOrEqual(P.maxHearts);
   expect(O.downs).toBeLessThanOrEqual(2);
   expect(OPP_STATES).toContain(O.st);
 }
@@ -214,18 +231,94 @@ describe('input and flow rules', () => {
   });
 });
 
-describe('fighter data', () => {
-  it('keeps every telegraph readable (at least 0.3s) even at full aggression', () => {
-    const t = CHAMP.tune;
-    expect(t.tele - t.teleAggr).toBeGreaterThanOrEqual(0.3);
-    expect(t.teleFast - t.teleFastAggr).toBeGreaterThanOrEqual(0.3);
+describe('new Championship Circuit & combat mechanics', () => {
+  beforeEach(() => {
+    start(10);
+    toFight();
+    O.st = 'idle';
+    O.timer = 999;
   });
 
-  it('has sane ranges', () => {
-    const t = CHAMP.tune;
-    expect(t.idle[0] - t.idleAggr[0]).toBeGreaterThan(0.3);
-    expect(t.combo[0] + t.combo[1]).toBeLessThanOrEqual(1);
-    expect(t.getupHp).toBeGreaterThan(0);
-    expect(t.getupHp).toBeLessThan(1);
+  it('activates Perfect Dodge and Counter-Punch Crit when dodging late in telegraph', () => {
+    O.st = 'tele';
+    O.atk = 'L';
+    O.teleDur = 0.6;
+    O.timer = 0.15;
+    press('dr');
+    expect(P.counterWin).toBeGreaterThan(0);
+
+    // Opponent enters recovery; player lands a counter punch for 1.5x damage + star
+    O.st = 'recover';
+    O.recoverHits = 0;
+    const hpBefore = O.hp;
+    press('pl');
+    expect(O.hp).toBe(hpBefore - 11); // round(7 * 1.5) = 11
+    expect(P.counterWin).toBe(0);
+    expect(P.stars).toBe(1);
+    expect(P.combo).toBe(1);
+  });
+
+  it('drains Hearts on guarded punches and enters Winded state at 0 Hearts', () => {
+    P.hearts = 2;
+    O.st = 'idle';
+    press('pl');
+    expect(P.hearts).toBe(0);
+    expect(P.winded).toBe(true);
+
+    // While winded, punches whiff without damaging opponent
+    run(0.5);
+    O.st = 'taunt';
+    const hpBefore = O.hp;
+    press('pr');
+    expect(O.hp).toBe(hpBefore);
+  });
+
+  it('allows button-mash Knockdown Rally to recover from 0 HP', () => {
+    hurtPlayer(100, false);
+    expect(G.playerDown).toBe(true);
+    expect(P.downs).toBe(1);
+
+    for (let i = 0; i < 6; i++) {
+      press('pl');
+    }
+    expect(G.playerDown).toBe(false);
+    expect(P.hp).toBe(50);
+    expect(P.hearts).toBe(P.maxHearts);
+  });
+
+  it('evaluates S/A/B/C grades and formats bout times accurately', () => {
+    expect(computeGrade(30, 0, 5, 35)).toBe('S');
+    expect(computeGrade(42, 0, 3, 35)).toBe('A');
+    expect(computeGrade(75, 1, 2, 35)).toBe('B');
+    expect(computeGrade(95, 2, 1, 35)).toBe('C');
+    expect(formatBoutTime(65.43)).toBe('1:05.4');
+  });
+
+  it('switches fighters cleanly across the 4-fighter Championship Circuit', () => {
+    selectFighter(GABBY);
+    newFight(GABBY);
+    expect(O.f.id).toBe('gabby');
+    expect(O.maxhp).toBe(80);
+    expect(P.maxHearts).toBe(12);
+  });
+});
+
+describe('fighter data', () => {
+  it('keeps every telegraph readable (at least 0.3s) even at full aggression across the roster', () => {
+    for (const fighter of ROSTER) {
+      const t = fighter.tune;
+      expect(t.tele - t.teleAggr).toBeGreaterThanOrEqual(0.3);
+      expect(t.teleFast - t.teleFastAggr).toBeGreaterThanOrEqual(0.3);
+    }
+  });
+
+  it('has sane ranges for all 4 Championship Circuit fighters', () => {
+    for (const fighter of ROSTER) {
+      const t = fighter.tune;
+      expect(t.idle[0] - t.idleAggr[0]).toBeGreaterThan(0.3);
+      expect(t.combo[0] + t.combo[1]).toBeLessThanOrEqual(1);
+      expect(t.getupHp).toBeGreaterThan(0);
+      expect(t.getupHp).toBeLessThan(1);
+    }
   });
 });

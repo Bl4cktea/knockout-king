@@ -1,11 +1,26 @@
 import { sfx } from '../audio';
-import { CHAMP } from '../fighters/champ';
+import { cloneLook } from '../fighters/boxer';
 import type { FighterData } from '../fighters/types';
+import { saveSettings, settings } from '../settings';
 import { parts } from './fx';
-import { BUFFER_WINDOW, G, O, P, buffer } from './state';
+import { BUFFER_WINDOW, G, O, P, buffer, looks } from './state';
+
+/** Switch the active circuit opponent and update their visual look. */
+export function selectFighter(fighter: FighterData): void {
+  G.selectedFighter = fighter;
+  O.f = fighter;
+  O.hp = fighter.maxHp;
+  O.maxhp = fighter.maxHp;
+  looks.opp = cloneLook(fighter.look);
+  settings.selectedFighterId = fighter.id;
+  settings.name = fighter.name;
+  saveSettings();
+}
 
 /** Reset everything and start a fresh bout against `fighter`. */
-export function newFight(fighter: FighterData = CHAMP): void {
+export function newFight(fighter: FighterData = G.selectedFighter): void {
+  G.selectedFighter = fighter;
+  const maxHearts = fighter.hearts ?? 10;
   Object.assign(P, {
     hp: 100,
     dodge: 0,
@@ -18,6 +33,18 @@ export function newFight(fighter: FighterData = CHAMP): void {
     x: 0,
     flash: 0,
     fall: 0,
+    hearts: maxHearts,
+    maxHearts,
+    winded: false,
+    windedT: 0,
+    counterWin: 0,
+    combo: 0,
+    maxCombo: 0,
+    score: 0,
+    downs: 0,
+    downT: 0,
+    count: 0,
+    rally: 0,
   });
   Object.assign(O, {
     f: fighter,
@@ -32,6 +59,7 @@ export function newFight(fighter: FighterData = CHAMP): void {
     flash: 0,
     hitT: 0,
     knock: 0,
+    recoverHits: 0,
     downY: 0,
     downT: 0,
     count: 0,
@@ -42,8 +70,13 @@ export function newFight(fighter: FighterData = CHAMP): void {
   clearBuffer();
   G.scene = 'intro';
   G.introT = 0;
+  G.winT = 0;
+  G.boutTime = 0;
   G.fightShown = false;
   G.freeze = 0;
+  G.playerDown = false;
+  G.lastGrade = '';
+  G.newRecord = false;
   G.banner = { text: 'ROUND 1', t: 0, dur: 1.0, size: 34, color: '#ffffff' };
   sfx.count();
 }

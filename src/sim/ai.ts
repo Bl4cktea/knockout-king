@@ -1,6 +1,8 @@
 import { W } from '../config';
 import { sfx } from '../audio';
+import { ROSTER } from '../fighters/champ';
 import type { Atk } from '../fighters/types';
+import { computeGrade, recordVictory } from '../settings';
 import { chance, pickOne, rand } from '../util/random';
 import { hurtPlayer } from './combat';
 import { addText } from './fx';
@@ -62,7 +64,16 @@ function resolveStrike(): void {
     if (t !== 'S') hurtPlayer(tn.chip, true);
   } else {
     sfx.whiff();
-    addText('DODGE!', W / 2 + P.x, 340, '#7dff9b', 16);
+    P.score += 50;
+    if (P.winded) {
+      P.winded = false;
+      P.windedT = 0;
+      P.hearts = Math.min(P.maxHearts, P.hearts + 5);
+      addText('STAMINA UP!', W / 2 + P.x, 340, '#7dff9b', 15);
+    } else {
+      P.hearts = Math.min(P.maxHearts, P.hearts + 1);
+      addText('DODGE!', W / 2 + P.x, 340, '#7dff9b', 16);
+    }
   }
 }
 
@@ -97,9 +108,17 @@ function downStep(dt: number): void {
   if (O.count >= need) {
     if (O.downs >= 2) {
       G.scene = 'win';
+      G.winT = 0;
       G.wait = 1.6;
-      G.banner = { text: 'K.O.!', t: 0, dur: 2.2, size: 56, color: '#ff4d4d' };
+      const grade = computeGrade(G.boutTime, P.downs, P.maxCombo, O.f.sRankTime ?? 55);
+      G.lastGrade = grade;
+      const timeBonus = Math.max(0, Math.round((90 - G.boutTime) * 40));
+      P.score += timeBonus + P.hp * 15;
+      const idx = ROSTER.findIndex((f) => f.id === O.f.id);
+      G.newRecord = recordVictory(O.f.id, idx >= 0 ? idx : 3, P.score, G.boutTime, grade);
+      G.banner = { text: 'K.O.!', t: 0, dur: 1.5, size: 56, color: '#ff4d4d' };
       sfx.win();
+      sfx.trophy();
     } else {
       O.st = 'getup';
       O.timer = 1.0;
@@ -109,6 +128,7 @@ function downStep(dt: number): void {
 }
 
 export function aiStep(dt: number): void {
+  if (G.playerDown) return;
   O.timer -= dt;
   switch (O.st) {
     case 'idle':
@@ -136,7 +156,7 @@ export function aiStep(dt: number): void {
       break;
     case 'strike':
       if (!O.strikeDone && O.timer <= tune().strike * 0.5) resolveStrike();
-      if (G.scene !== 'fight') return;
+      if (G.scene !== 'fight' || G.playerDown) return;
       if (O.timer <= 0) endStrike();
       break;
     case 'recover':

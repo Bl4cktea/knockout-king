@@ -1,11 +1,159 @@
 import { EXTRA } from '../face/config';
 import type { FighterData } from './types';
 
+/** Contender #1: Circuit Rookie with wide telegraphs and frequent taunts. */
+export const GABBY: FighterData = {
+  id: 'gabby',
+  name: 'GLASS GABBY',
+  title: 'Circuit Rookie · #3 Contender',
+  quote: 'Watch the hair! I have a glass jaw if you catch me bragging!',
+  maxHp: 80,
+  hearts: 12,
+  sRankTime: 35,
+  look: {
+    face: {
+      skin: 1,
+      head: 0,
+      eyes: 1,
+      brows: 1,
+      nose: 0,
+      mouth: 4,
+      hair: 2,
+      hairColor: 3,
+      facial: 0,
+      extras: EXTRA.headband,
+    },
+    trunks: '#2ec4b6',
+    trim: '#ffffff',
+    gloves: ['#4ea8de', '#1d4e89'],
+  },
+  tune: {
+    idle: [1.6, 2.2],
+    idleAggr: [0.6, 0.8],
+    tele: 0.78,
+    teleAggr: 0.16,
+    teleFast: 0.56,
+    teleFastAggr: 0.1,
+    combo: [0.05, 0.25],
+    repeat: 0.5,
+    taunt: 0.38,
+    dmg: { L: 9, R: 9, S: 6 },
+    chip: 2,
+    strike: 0.3,
+    recoverDodge: [1.35, 0.25],
+    recoverBlock: 0.45,
+    stunTime: 2.6,
+    getupHp: 0.35,
+    count: [4, 3],
+    aggro: [0.45, 0.35],
+  },
+};
+
+/** Contender #2: Fast combination puncher who strings together rapid flurries. */
+export const LEO: FighterData = {
+  id: 'leo',
+  name: 'FLASH LEO',
+  title: 'Speedster · #2 Contender',
+  quote: 'Blink once and you will eat a two-piece combo!',
+  maxHp: 90,
+  hearts: 11,
+  sRankTime: 45,
+  look: {
+    face: {
+      skin: 3,
+      head: 2,
+      eyes: 3,
+      brows: 3,
+      nose: 1,
+      mouth: 2,
+      hair: 5,
+      hairColor: 5,
+      facial: 2,
+      extras: EXTRA.shades,
+    },
+    trunks: '#8338ec',
+    trim: '#ffbe0b',
+    gloves: ['#ffbe0b', '#fb5607'],
+  },
+  tune: {
+    idle: [1.2, 1.75],
+    idleAggr: [0.65, 0.85],
+    tele: 0.62,
+    teleAggr: 0.18,
+    teleFast: 0.44,
+    teleFastAggr: 0.1,
+    combo: [0.35, 0.48],
+    repeat: 0.4,
+    taunt: 0.22,
+    dmg: { L: 10, R: 10, S: 8 },
+    chip: 2,
+    strike: 0.25,
+    recoverDodge: [1.1, 0.28],
+    recoverBlock: 0.35,
+    stunTime: 2.2,
+    getupHp: 0.4,
+    count: [5, 3],
+    aggro: [0.55, 0.4],
+  },
+};
+
+/** Contender #3: Heavyweight bruiser with punishing hooks and heavy block chip. */
+export const IVAN: FighterData = {
+  id: 'ivan',
+  name: 'IRON IVAN',
+  title: 'Heavy Bruiser · #1 Contender',
+  quote: 'Blocking my hooks will only rattle your ribs, little comrade!',
+  maxHp: 115,
+  hearts: 10,
+  sRankTime: 55,
+  look: {
+    face: {
+      skin: 0,
+      head: 3,
+      eyes: 5,
+      brows: 4,
+      nose: 4,
+      mouth: 1,
+      hair: 1,
+      hairColor: 2,
+      facial: 4,
+      extras: EXTRA.scar,
+    },
+    trunks: '#38b000',
+    trim: '#ffd166',
+    gloves: ['#ef233c', '#8d0801'],
+  },
+  tune: {
+    idle: [1.45, 2.0],
+    idleAggr: [0.7, 0.9],
+    tele: 0.7,
+    teleAggr: 0.2,
+    teleFast: 0.48,
+    teleFastAggr: 0.1,
+    combo: [0.18, 0.4],
+    repeat: 0.55,
+    taunt: 0.2,
+    dmg: { L: 16, R: 16, S: 11 },
+    chip: 5,
+    strike: 0.3,
+    recoverDodge: [1.2, 0.3],
+    recoverBlock: 0.32,
+    stunTime: 2.1,
+    getupHp: 0.45,
+    count: [5, 3],
+    aggro: [0.5, 0.4],
+  },
+};
+
 /** The original opponent, with the exact timings from the first version of the game. */
 export const CHAMP: FighterData = {
   id: 'champ',
   name: 'THE CHAMP',
+  title: 'World Title Holder · Final Boss',
+  quote: 'Two knockdowns to take my belt? Show me your Perfect Dodge!',
   maxHp: 100,
+  hearts: 10,
+  sRankTime: 60,
   look: {
     face: {
       skin: 4,
@@ -44,3 +192,10 @@ export const CHAMP: FighterData = {
     aggro: [0.55, 0.4],
   },
 };
+
+/** Ordered 4-fighter Championship Circuit ladder. */
+export const ROSTER: readonly FighterData[] = [GABBY, LEO, IVAN, CHAMP];
+
+export function getFighterById(id: string): FighterData {
+  return ROSTER.find((f) => f.id === id) ?? CHAMP;
+}

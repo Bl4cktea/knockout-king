@@ -5,7 +5,7 @@ import { G, O, P } from '../sim/state';
 /** Which facial expression the opponent should wear right now. */
 export function oppExpr(): Expr {
   if (G.scene === 'win') return 'ko';
-  if (G.scene === 'lose') return 'win';
+  if (G.scene === 'lose' || G.playerDown) return 'win';
   if (O.flash > 0 || O.hitT > 0) return 'hit';
   switch (O.st) {
     case 'tele':
@@ -26,7 +26,8 @@ export function oppExpr(): Expr {
 export function playerExpr(): Expr {
   if (G.scene === 'lose') return 'ko';
   if (G.scene === 'win') return 'win';
+  if (G.playerDown || P.winded) return 'stunned';
   if (P.stun > 0 || P.flash > 0) return 'hit';
-  if (isBlocking() || P.punch?.big) return 'wind';
+  if (isBlocking() || P.punch?.big || P.counterWin > 0) return 'wind';
   return 'idle';
 }

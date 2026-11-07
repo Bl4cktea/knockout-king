@@ -71,6 +71,11 @@ export const sfx = {
     noise(0.09, 0.2, 400);
     tone(150, 0.12, 'sine', 0.2, -90);
   },
+  counter(): void {
+    noise(0.14, 0.28, 260);
+    tone(220, 0.16, 'triangle', 0.26, -120);
+    tone(880, 0.1, 'square', 0.06, 220, 0.03);
+  },
   heavy(): void {
     noise(0.22, 0.35, 150);
     tone(100, 0.3, 'sine', 0.35, -60);
@@ -82,6 +87,20 @@ export const sfx = {
   },
   whiff(): void {
     noise(0.14, 0.07, 1800);
+  },
+  perfect(): void {
+    tone(880, 0.08, 'sine', 0.08);
+    tone(1320, 0.12, 'triangle', 0.08, 180, 0.04);
+  },
+  winded(): void {
+    tone(280, 0.14, 'sawtooth', 0.07, -80);
+    tone(190, 0.22, 'sawtooth', 0.07, -70, 0.1);
+  },
+  rally(): void {
+    tone(440, 0.05, 'square', 0.04, 160);
+  },
+  getup(): void {
+    [440, 554, 659, 880].forEach((f, i) => tone(f, 0.14, 'triangle', 0.07, 0, i * 0.06));
   },
   hurt(): void {
     noise(0.18, 0.3, 200);
@@ -103,6 +122,11 @@ export const sfx = {
   },
   win(): void {
     [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.25, 'square', 0.05, 0, i * 0.14));
+  },
+  trophy(): void {
+    [587, 740, 880, 1175, 1480].forEach((f, i) =>
+      tone(f, 0.22, 'triangle', 0.065, 40, 0.45 + i * 0.09),
+    );
   },
   lose(): void {
     [330, 262, 196].forEach((f, i) => tone(f, 0.3, 'sawtooth', 0.06, 0, i * 0.2));

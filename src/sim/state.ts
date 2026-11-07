@@ -1,6 +1,6 @@
 import { PLAYER_LOOK, cloneLook } from '../fighters/boxer';
 import { CHAMP } from '../fighters/champ';
-import type { Atk, FighterData, Look } from '../fighters/types';
+import type { Atk, FighterData, Grade, Look } from '../fighters/types';
 
 export type Scene = 'title' | 'intro' | 'fight' | 'win' | 'lose';
 export type Action = 'dl' | 'dr' | 'blk' | 'pl' | 'pr' | 'star' | 'start';
@@ -19,13 +19,19 @@ export interface Banner {
 export const G = {
   scene: 'title' as Scene,
   time: 0,
+  boutTime: 0,
   wait: 0,
   shake: 0,
   freeze: 0,
   banner: null as Banner | null,
   introT: 0,
+  winT: 0,
   fightShown: false,
   paused: false,
+  playerDown: false,
+  lastGrade: '' as Grade | '',
+  newRecord: false,
+  selectedFighter: CHAMP as FighterData,
 };
 
 export interface Player {
@@ -40,6 +46,18 @@ export interface Player {
   x: number;
   flash: number;
   fall: number;
+  hearts: number;
+  maxHearts: number;
+  winded: boolean;
+  windedT: number;
+  counterWin: number;
+  combo: number;
+  maxCombo: number;
+  score: number;
+  downs: number;
+  downT: number;
+  count: number;
+  rally: number;
 }
 
 export interface Opp {
@@ -77,6 +95,18 @@ export const P: Player = {
   x: 0,
   flash: 0,
   fall: 0,
+  hearts: 10,
+  maxHearts: 10,
+  winded: false,
+  windedT: 0,
+  counterWin: 0,
+  combo: 0,
+  maxCombo: 0,
+  score: 0,
+  downs: 0,
+  downT: 0,
+  count: 0,
+  rally: 0,
 };
 
 export const O: Opp = {

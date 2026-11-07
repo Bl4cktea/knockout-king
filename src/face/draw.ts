@@ -675,9 +675,19 @@ export function drawFace(c: Ctx, f: FaceConfig, o: FaceOpts = {}): void {
     c.fill();
   }
 
-  // head
-  c.fillStyle = tone;
+  // head with 2.5D spherical spotlight shading
+  const headGrad = c.createRadialGradient(-14, -36, 10, 0, 8, 98);
+  headGrad.addColorStop(0, shade(tone, 0.14));
+  headGrad.addColorStop(0.55, tone);
+  headGrad.addColorStop(1, shade(tone, -0.18));
+  c.fillStyle = headGrad;
   c.fill(hp);
+
+  // Subtle forehead & cheekbone 3D specular highlight
+  c.fillStyle = 'rgba(255,255,255,.12)';
+  ell(c, -12, -52, 26, 14);
+  c.fill();
+
   c.fillStyle = 'rgba(255,90,90,.16)';
   for (const s of [-1, 1]) {
     ell(c, s * 38, 22, 12, 8);

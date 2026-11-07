@@ -4,13 +4,13 @@ import { clearBuffer } from './flow';
 import { updateParts } from './fx';
 import { updateOpp } from './opponent';
 import { updatePlayer } from './player';
-import { G, P, buffer } from './state';
+import { G, O, P, buffer } from './state';
 
 /** A press that landed just before a cooldown ended still counts (see BUFFER_WINDOW). */
 function processBuffer(dt: number): void {
   if (!buffer.a) return;
   buffer.t -= dt;
-  if (buffer.t <= 0 || P.stun > 0 || G.scene !== 'fight') {
+  if (buffer.t <= 0 || P.stun > 0 || G.scene !== 'fight' || G.playerDown) {
     clearBuffer();
     return;
   }
@@ -39,6 +39,10 @@ export function step(dt: number): void {
       sfx.bell();
     }
     if (G.introT > 1.8) G.scene = 'fight';
+  } else if (G.scene === 'fight' && !G.playerDown && O.st !== 'down') {
+    G.boutTime += dt;
+  } else if (G.scene === 'win') {
+    G.winT += dt;
   }
   updatePlayer(dt);
   processBuffer(dt);
