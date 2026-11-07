@@ -75,7 +75,7 @@ body {
 }
 .arena-layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -559,6 +559,25 @@ kbd.sym {
 @media (max-width: 640px) {
   .topbar-meta {
     display: none;
+  }
+  .topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .brand {
+    font-size: 11px;
+  }
+  .topbar-actions {
+    gap: 6px;
+  }
+  .topbar-actions .btn {
+    padding-inline: 8px;
+  }
+  .locker-full {
+    width: 104px;
+  }
+  .locker-body .locker-grid {
+    grid-template-columns: 1fr;
   }
 }
 

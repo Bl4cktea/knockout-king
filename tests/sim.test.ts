@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { STEP } from '../src/config';
 import { CHAMP, GABBY, ROSTER } from '../src/fighters/champ';
-import { computeGrade, formatBoutTime } from '../src/settings';
+import type { FighterData } from '../src/fighters/types';
+import { computeGrade, formatBoutTime, settings } from '../src/settings';
+import { challengerFighter } from '../src/share';
 import { hurtPlayer, press } from '../src/sim/combat';
 import { newFight, selectFighter } from '../src/sim/flow';
 import { G, O, OG, OH, P, buffer, held } from '../src/sim/state';
@@ -11,7 +13,7 @@ import { setRandom } from '../src/util/random';
 
 const OPP_STATES = ['idle', 'taunt', 'tele', 'strike', 'recover', 'stunned', 'down', 'getup'];
 
-function start(seed: number): void {
+function start(seed: number, fighter: FighterData = CHAMP): void {
   setRandom(mulberry32(seed));
   G.scene = 'title';
   G.wait = 0;
@@ -21,8 +23,8 @@ function start(seed: number): void {
   G.time = 0;
   G.banner = null;
   held.blk = false;
-  selectFighter(CHAMP);
-  newFight(CHAMP);
+  selectFighter(fighter);
+  newFight(fighter);
 }
 
 /** Advance `seconds` of simulated time. */
@@ -69,8 +71,13 @@ function assertSane(): void {
 type Bot = (t: number) => void;
 
 /** Plays one full bout. Returns how it ended and how long it took. */
-function playBout(seed: number, makeBot: () => Bot, maxSeconds = 600) {
-  start(seed);
+function playBout(
+  seed: number,
+  makeBot: () => Bot,
+  maxSeconds = 600,
+  fighter: FighterData = CHAMP,
+) {
+  start(seed, fighter);
   const bot = makeBot();
   let steps = 0;
   const limit = Math.round(maxSeconds / STEP);
@@ -320,5 +327,54 @@ describe('fighter data', () => {
       expect(t.getupHp).toBeGreaterThan(0);
       expect(t.getupHp).toBeLessThan(1);
     }
+  });
+});
+
+describe('whole circuit soak', () => {
+  const challenger = challengerFighter({
+    name: 'DAVE',
+    face: GABBY.look.face,
+    trunks: GABBY.look.trunks,
+  });
+  const everyone = [...ROSTER, challenger];
+
+  it.each(everyone.map((f) => [f.id, f] as const))(
+    '%s: a passive player loses and a telegraph-reader can win',
+    (_id, f) => {
+      for (const seed of [1, 2]) {
+        const r = playBout(seed, () => idleBot, 600, f);
+        expect(r.scene).toBe('lose');
+      }
+      const wins = [31, 32, 33, 34, 35, 36].filter(
+        (s) => playBout(s, makeSmart, 600, f).scene === 'win',
+      ).length;
+      expect(wins).toBeGreaterThanOrEqual(1);
+    },
+  );
+
+  it.each(everyone.map((f) => [f.id, f] as const))('%s: mashing terminates cleanly', (_id, f) => {
+    for (const seed of [41, 42]) {
+      expect(['win', 'lose']).toContain(playBout(seed, makeMasher, 600, f).scene);
+    }
+  });
+
+  it('beating a roster rival unlocks the next one; beating a challenger changes nothing', () => {
+    const fresh = (): void => {
+      settings.unlockedIdx = 0;
+      for (const f of ROSTER)
+        settings.career[f.id] = { wins: 0, bestScore: 0, bestTime: null, bestGrade: '' };
+    };
+    fresh();
+    const winSeed = (f: FighterData): void => {
+      for (let s = 50; s < 90; s++) if (playBout(s, makeSmart, 600, f).scene === 'win') return;
+      throw new Error(`no winning seed for ${f.id}`);
+    };
+    winSeed(challenger);
+    expect(settings.unlockedIdx).toBe(0);
+    expect(settings.career.challenger).toBeUndefined();
+    winSeed(GABBY);
+    expect(settings.unlockedIdx).toBe(1);
+    expect(settings.career.gabby?.wins).toBeGreaterThan(0);
+    fresh();
   });
 });
