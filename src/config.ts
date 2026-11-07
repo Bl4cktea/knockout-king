@@ -8,3 +8,6 @@ export const FONT = '"Press Start 2P","Courier New",monospace';
 export const STEP = 1 / 120;
 
 export const TAU = Math.PI * 2;
+
+/** Where beta testers send feedback. Empty hides the footer link. */
+export const FEEDBACK_EMAIL = 'chris.jedediah@gmail.com';

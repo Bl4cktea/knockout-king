@@ -1,6 +1,6 @@
 import '@fontsource/press-start-2p/latin-400.css';
 import './style.css';
-import { FONT, H, STEP, W } from './config';
+import { FEEDBACK_EMAIL, FONT, H, STEP, W } from './config';
 import { initInput, setPaused } from './input';
 import { render } from './render';
 import { buildBackground } from './render/background';
@@ -15,6 +15,12 @@ loadSettings();
 const cv = document.getElementById('c') as HTMLCanvasElement;
 const ctx = cv.getContext('2d');
 if (!ctx) throw new Error('Canvas 2D is not available');
+
+const fb = document.getElementById('feedback') as HTMLAnchorElement | null;
+if (fb && FEEDBACK_EMAIL) {
+  fb.href = `mailto:${FEEDBACK_EMAIL}?subject=Knockout%20King%20beta%20feedback`;
+  fb.hidden = false;
+}
 
 const sync = initUI();
 initInput(cv, document.getElementById('pad') as HTMLElement);

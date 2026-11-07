@@ -1,3 +1,4 @@
+import { isBlocked } from './blocklist';
 import { isValidFace } from './face/config';
 import type { FaceConfig } from './face/config';
 import { TRUNK_COLORS } from './fighters/boxer';
@@ -121,7 +122,7 @@ export function cleanName(raw: string, fallback = DEFAULT_NAME): string {
     return c > 31 && c !== 127;
   });
   const s = printable.join('').trim().toUpperCase().slice(0, 12);
-  return s || fallback;
+  return s && !isBlocked(s) ? s : fallback;
 }
 
 export function loadSettings(): void {
