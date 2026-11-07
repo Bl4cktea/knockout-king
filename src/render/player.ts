@@ -28,7 +28,9 @@ export function drawPlayer(ctx: Ctx): void {
   const fy = fall * 170;
   const hurt = P.flash > 0;
   const winded = P.winded;
-  const punchTwist = P.punch ? P.punch.hand * Math.sin(Math.PI * clamp(P.punch.t / 0.26, 0, 1)) * 10 : 0;
+  const punchTwist = P.punch
+    ? P.punch.hand * Math.sin(Math.PI * clamp(P.punch.t / 0.26, 0, 1)) * 10
+    : 0;
   // Flicker when hurt, except for people who asked for less motion: then it is a steady dim.
   const flick = hurt && (calm ? true : Math.floor(G.time * 28) % 2 === 0);
 

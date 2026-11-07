@@ -141,7 +141,10 @@ export function loadSettings(): void {
             bestScore: typeof e.bestScore === 'number' ? e.bestScore : 0,
             bestTime: typeof e.bestTime === 'number' ? e.bestTime : null,
             bestGrade:
-              e.bestGrade === 'S' || e.bestGrade === 'A' || e.bestGrade === 'B' || e.bestGrade === 'C'
+              e.bestGrade === 'S' ||
+              e.bestGrade === 'A' ||
+              e.bestGrade === 'B' ||
+              e.bestGrade === 'C'
                 ? e.bestGrade
                 : '',
           };

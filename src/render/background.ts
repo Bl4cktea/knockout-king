@@ -118,7 +118,10 @@ export function drawRing25D(ctx: CanvasRenderingContext2D, bg: HTMLCanvasElement
     245,
     360,
   );
-  spot.addColorStop(0, P.counterWin > 0 ? 'rgba(125, 255, 155, 0.34)' : 'rgba(255, 238, 190, 0.36)');
+  spot.addColorStop(
+    0,
+    P.counterWin > 0 ? 'rgba(125, 255, 155, 0.34)' : 'rgba(255, 238, 190, 0.36)',
+  );
   spot.addColorStop(1, 'rgba(255, 238, 190, 0)');
   ctx.fillStyle = spot;
   ctx.fillRect(0, 0, W, H);

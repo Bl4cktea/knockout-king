@@ -133,7 +133,13 @@ function drawTrophyBadge(
   ctx.lineWidth = 5;
   for (const s of [-1, 1]) {
     ctx.beginPath();
-    ctx.arc(s * 21, -8, 12, s > 0 ? -Math.PI * 0.45 : Math.PI * 0.55, s > 0 ? Math.PI * 0.45 : -Math.PI * 0.55);
+    ctx.arc(
+      s * 21,
+      -8,
+      12,
+      s > 0 ? -Math.PI * 0.45 : Math.PI * 0.55,
+      s > 0 ? Math.PI * 0.45 : -Math.PI * 0.55,
+    );
     ctx.stroke();
   }
 
@@ -320,7 +326,7 @@ export function drawOverlays(ctx: Ctx): void {
       // Celebrate with falling gold confetti sparkles on win
       if (win && !calm) {
         for (let i = 0; i < 18; i++) {
-          const cx = ((i * 97 + Math.floor(G.winT * 45) * (i % 3 === 0 ? 1 : -1)) % W + W) % W;
+          const cx = (((i * 97 + Math.floor(G.winT * 45) * (i % 3 === 0 ? 1 : -1)) % W) + W) % W;
           const cy = 60 + ((i * 53 + G.winT * (65 + (i % 4) * 18)) % (H - 80));
           const col = i % 3 === 0 ? '#ffd23f' : i % 3 === 1 ? '#7dff9b' : '#ff4d5e';
           drawStar(ctx, cx, cy, 5 + (i % 3) * 2, col);

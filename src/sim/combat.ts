@@ -109,8 +109,7 @@ export function dodge(d: -1 | 1): ActResult {
 
   // Check for Perfect Dodge in the final moments of an opponent's telegraph
   if (O.st === 'tele' && O.timer <= 0.22 && P.counterWin <= 0) {
-    const validDir =
-      O.atk === 'S' || (O.atk === 'L' && d === 1) || (O.atk === 'R' && d === -1);
+    const validDir = O.atk === 'S' || (O.atk === 'L' && d === 1) || (O.atk === 'R' && d === -1);
     if (validDir) {
       P.counterWin = 1.4;
       P.winded = false;
