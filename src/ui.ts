@@ -3,7 +3,9 @@ import { EXTRA, FACE_COUNTS, randomFace } from './face/config';
 import type { FaceConfig } from './face/config';
 import { drawFace } from './face/draw';
 import { bodyTone } from './face/palette';
+import { NEUTRAL_POSE, drawBoxer } from './render/opponent';
 import { TRUNK_COLORS } from './fighters/boxer';
+import type { Look } from './fighters/types';
 import { ROSTER, getFighterById } from './fighters/champ';
 import { setPaused, togglePause } from './input';
 import {
@@ -61,6 +63,21 @@ function renderMiniPortrait(
     damage: defeated ? 0.45 : 0,
   });
   ctx.restore();
+}
+
+/** Full-body preview for the wardrobe: the same figure the ring draws, in guard stance. */
+function renderFullPreview(cv: HTMLCanvasElement, look: Look): void {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = 220;
+  const h = 320;
+  cv.width = w * dpr;
+  cv.height = h * dpr;
+  const ctx = cv.getContext('2d');
+  if (!ctx) return;
+  ctx.scale(dpr, dpr);
+  ctx.translate(w / 2, 82);
+  ctx.scale(0.5, 0.5);
+  drawBoxer(ctx, look, NEUTRAL_POSE);
 }
 
 /** Wire up the panel under the canvas. Returns a cheap per-frame sync for button state. */
@@ -142,7 +159,7 @@ export function initUI(): () => void {
 
   const updateWardrobePreview = (): void => {
     const look = editTarget === 'opp' ? looks.opp : looks.player;
-    renderMiniPortrait(custPreview, look.face, false, 52);
+    renderFullPreview(custPreview, look);
     custTargetBtn.textContent = editTarget === 'opp' ? 'Target: Rival' : 'Target: You';
     custTargetLabel.textContent =
       editTarget === 'opp' ? `Editing: ${settings.name}` : 'Editing: Your Boxer';

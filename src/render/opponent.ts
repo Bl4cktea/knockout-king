@@ -1,6 +1,8 @@
 import { W } from '../config';
+import type { Expr } from '../face/config';
 import { drawFace } from '../face/draw';
 import { bodyTone } from '../face/palette';
+import type { Look } from '../fighters/types';
 import { isReducedMotion } from '../settings';
 import { G, O, OG, OH, looks } from '../sim/state';
 import { shade } from '../util/color';
@@ -71,16 +73,46 @@ function arm(
   ctx.restore();
 }
 
-export function drawOpponent(ctx: Ctx): void {
-  const look = looks.opp;
-  const tone = bodyTone(look.face.skin);
-  const calm = isReducedMotion();
-  const breath = calm ? 0 : Math.sin(G.time * 3.6) * 2.5;
+export interface BoxerPose {
+  /** Torso bob in logical px. */
+  breath: number;
+  L: GlovePose;
+  R: GlovePose;
+  head: { ox: number; oy: number; rot: number };
+  /** Head squash on impact: 1 = none. */
+  squash: number;
+  expr: Expr;
+  damage: number;
+  flash: number;
+  time: number;
+  champ: boolean;
+  stunned: boolean;
+}
+interface GlovePose {
+  x: number;
+  y: number;
+  s: number;
+  glow: number;
+}
 
-  ctx.save();
-  const dr = clamp(O.downY / 330, 0, 1);
-  ctx.translate(W / 2 + OH.ox * 0.4, 172 + O.downY);
-  ctx.rotate(dr * 0.35);
+/** Guard stance, used by the wardrobe preview. */
+export const NEUTRAL_POSE: BoxerPose = {
+  breath: 0,
+  L: { x: -56, y: 84, s: 1, glow: 0 },
+  R: { x: 56, y: 84, s: 1, glow: 0 },
+  head: { ox: 0, oy: 0, rot: 0 },
+  squash: 1,
+  expr: 'idle',
+  damage: 0,
+  flash: 0,
+  time: 0,
+  champ: false,
+  stunned: false,
+};
+
+/** The whole boxer (neck, torso, trunks, arms, head, gloves), centred on the head. */
+export function drawBoxer(ctx: Ctx, look: Look, p: BoxerPose): void {
+  const tone = bodyTone(look.face.skin);
   ctx.lineJoin = 'round';
 
   // Sculpted trapezius & neck with cast chin shadow
@@ -107,7 +139,7 @@ export function drawOpponent(ctx: Ctx): void {
   ctx.fill();
 
   // 2.5D Sculpted Torso (V-taper lats + chest + abs)
-  const tg = ctx.createRadialGradient(0, 155 + breath, 16, 0, 195, 135);
+  const tg = ctx.createRadialGradient(0, 155 + p.breath, 16, 0, 195, 135);
   tg.addColorStop(0, shade(tone.light, 0.12));
   tg.addColorStop(0.58, tone.light);
   tg.addColorStop(1, tone.dark);
@@ -115,8 +147,8 @@ export function drawOpponent(ctx: Ctx): void {
   ctx.strokeStyle = '#1a0a0a';
   ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(-110, 146 + breath * 0.5);
-  ctx.quadraticCurveTo(0, 90 + breath, 110, 146 + breath * 0.5);
+  ctx.moveTo(-110, 146 + p.breath * 0.5);
+  ctx.quadraticCurveTo(0, 90 + p.breath, 110, 146 + p.breath * 0.5);
   ctx.lineTo(84, 320);
   ctx.lineTo(-84, 320);
   ctx.closePath();
@@ -127,7 +159,7 @@ export function drawOpponent(ctx: Ctx): void {
   for (const s of [-1, 1]) {
     ctx.fillStyle = 'rgba(255,255,255,0.11)';
     ctx.beginPath();
-    ctx.ellipse(s * 42, 152 + breath, 30, 18, s * -0.15, 0, Math.PI * 2);
+    ctx.ellipse(s * 42, 152 + p.breath, 30, 18, s * -0.15, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -135,21 +167,21 @@ export function drawOpponent(ctx: Ctx): void {
   ctx.strokeStyle = 'rgba(20, 8, 12, 0.35)';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(0, 126 + breath);
+  ctx.moveTo(0, 126 + p.breath);
   ctx.lineTo(0, 248);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(-40, 164 + breath, 38, 0.22, Math.PI - 0.22);
+  ctx.arc(-40, 164 + p.breath, 38, 0.22, Math.PI - 0.22);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(40, 164 + breath, 38, 0.22, Math.PI - 0.22);
+  ctx.arc(40, 164 + p.breath, 38, 0.22, Math.PI - 0.22);
   ctx.stroke();
 
   // 6-pack abdominal creases
   for (const ay of [198, 220, 242]) {
     ctx.beginPath();
-    ctx.moveTo(-26, ay + breath * 0.4);
-    ctx.quadraticCurveTo(0, ay - 4 + breath * 0.4, 26, ay + breath * 0.4);
+    ctx.moveTo(-26, ay + p.breath * 0.4);
+    ctx.quadraticCurveTo(0, ay - 4 + p.breath * 0.4, 26, ay + p.breath * 0.4);
     ctx.stroke();
   }
 
@@ -182,38 +214,33 @@ export function drawOpponent(ctx: Ctx): void {
   ctx.fillRect(-90, 252, 180, 22);
   ctx.strokeRect(-90, 252, 180, 22);
 
-  ctx.fillStyle = O.f.id === 'champ' ? '#ffd23f' : shade(look.trim, -0.15);
+  ctx.fillStyle = p.champ ? '#ffd23f' : shade(look.trim, -0.15);
   ctx.beginPath();
   ctx.ellipse(0, 263, 24, 11, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
-  if (O.f.id === 'champ') {
+  if (p.champ) {
     drawStar(ctx, 0, 263, 7, '#d62839');
   }
 
   // Sculpted 2-segment arms
-  arm(ctx, -102, 144 + breath * 0.5, OG.L.x, OG.L.y, -1, tone.light, tone.dark);
-  arm(ctx, 102, 144 + breath * 0.5, OG.R.x, OG.R.y, 1, tone.light, tone.dark);
+  arm(ctx, -102, 144 + p.breath * 0.5, p.L.x, p.L.y, -1, tone.light, tone.dark);
+  arm(ctx, 102, 144 + p.breath * 0.5, p.R.x, p.R.y, 1, tone.light, tone.dark);
 
   // Head (squashes on impact)
   ctx.save();
-  ctx.translate(OH.ox * 0.6, OH.oy);
-  const sq = O.hitT > 0 ? 1 + 0.06 * (O.hitT / 0.22) : 1;
-  ctx.rotate(OH.rot);
+  ctx.translate(p.head.ox * 0.6, p.head.oy);
+  const sq = p.squash;
+  ctx.rotate(p.head.rot);
   ctx.scale(sq, 2 - sq);
-  drawFace(ctx, look.face, {
-    expr: oppExpr(),
-    t: G.time,
-    damage: 1 - O.hp / O.maxhp,
-    flash: clamp(O.flash * 5, 0, 0.7) * (calm ? 0.3 : 1),
-  });
+  drawFace(ctx, look.face, { expr: p.expr, t: p.time, damage: p.damage, flash: p.flash });
   ctx.restore();
 
-  if (O.st === 'stunned') {
+  if (p.stunned) {
     ctx.save();
-    ctx.translate(OH.ox * 0.6, OH.oy);
+    ctx.translate(p.head.ox * 0.6, p.head.oy);
     for (let i = 0; i < 3; i++) {
-      const a = G.time * 5 + i * 2.09;
+      const a = p.time * 5 + i * 2.09;
       drawStar(ctx, Math.cos(a) * 72, -104 + Math.sin(a) * 14, 9, '#ffd23f');
     }
     ctx.restore();
@@ -221,8 +248,32 @@ export function drawOpponent(ctx: Ctx): void {
 
   // 2.5D Leather Gloves
   const [g1, g2] = look.gloves;
-  glove(ctx, OG.L.x, OG.L.y, OG.L.s, g1, g2, OG.L.glow, -1, -1);
-  glove(ctx, OG.R.x, OG.R.y, OG.R.s, g1, g2, OG.R.glow, 1, -1);
+  glove(ctx, p.L.x, p.L.y, p.L.s, g1, g2, p.L.glow, -1, -1);
+  glove(ctx, p.R.x, p.R.y, p.R.s, g1, g2, p.R.glow, 1, -1);
+}
+
+export function drawOpponent(ctx: Ctx): void {
+  const look = looks.opp;
+  const calm = isReducedMotion();
+
+  ctx.save();
+  const dr = clamp(O.downY / 330, 0, 1);
+  ctx.translate(W / 2 + OH.ox * 0.4, 172 + O.downY);
+  ctx.rotate(dr * 0.35);
+
+  drawBoxer(ctx, look, {
+    breath: calm ? 0 : Math.sin(G.time * 3.6) * 2.5,
+    L: OG.L,
+    R: OG.R,
+    head: OH,
+    squash: O.hitT > 0 ? 1 + 0.06 * (O.hitT / 0.22) : 1,
+    expr: oppExpr(),
+    damage: 1 - O.hp / O.maxhp,
+    flash: clamp(O.flash * 5, 0, 0.7) * (calm ? 0.3 : 1),
+    time: G.time,
+    champ: O.f.id === 'champ',
+    stunned: O.st === 'stunned',
+  });
 
   // Telegraph marker + directional wind-up arc
   if (O.st === 'tele') {

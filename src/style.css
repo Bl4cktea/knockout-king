@@ -387,13 +387,24 @@ canvas#c {
   align-items: center;
   gap: 10px;
 }
-#cust-preview {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+.locker-body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.locker-full {
+  flex: 0 0 auto;
+  width: 150px;
+  aspect-ratio: 220 / 320;
+  border-radius: 10px;
   border: 2px solid var(--gold);
-  background: #05081c;
-  display: block;
+  background: radial-gradient(ellipse at 50% 30%, #1a2160, #05081c 75%);
+  position: sticky;
+  top: 8px;
+}
+.locker-body .locker-grid {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .locker-title {
   font: 400 9px/1.4 var(--pixel);
